@@ -9,6 +9,7 @@ const UserSchema = new Schema({
     unique: true,
   },
 });
+// plugs in passport logic and credentials
 UserSchema.plugin(passportLocalMongoose);
 
 module.exports = mongoose.model("User", UserSchema);
