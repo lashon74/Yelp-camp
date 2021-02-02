@@ -18,12 +18,14 @@ const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
 const helmet = require("helmet");
-const { contentSecurityPolicy } = require("helmet");
+// const { MongoStore } = require('connect-mongo');
+const MongoDBStore = require("connect-mongo")(session);
 // const mongoSanitize = require("express-mongo-sanitize");
 
 // Main Js file
-
-mongoose.connect("mongodb://localhost:27017/yelp-camp", {
+// const dbUrl = process.env.DB_URL;
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+mongoose.connect(dbUrl, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true,
@@ -47,11 +49,25 @@ app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 // app.use(mongoSanitize);
 
+const secrect = process.env.SECRECT || "thisshouldbeabettersecret";;
+
+// Sets mongo as main session store instead of memory
+const store = new MongoDBStore({
+  url: dbUrl,
+  secrect,
+  touchAfter: 24 * 60 * 60,
+});
+
+store.on('error', function (e) {
+  console.log("SESSION STORE ERROR", e);
+})
+
 // This ensures that cookies are only accepted over http not JS
 const sessionConfig = {
+  store,
   // Gives name to session
   name: "session",
-  secret: "thisshouldbeabettersecret!",
+  secrect,
   resave: false,
   saveUninitialized: true,
   cookie: {
@@ -65,7 +81,56 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 app.use(flash());
-app.use(helmet({contentSecurityPolicy: false}));
+app.use(helmet());
+
+// include scripts that will be allowed with helmet
+const scriptSrcUrls = [
+  "https://stackpath.bootstrapcdn.com/",
+  "https://api.tiles.mapbox.com/",
+  "https://api.mapbox.com/",
+  "https://kit.fontawesome.com/",
+  "https://cdnjs.cloudflare.com/",
+  "https://cdn.jsdelivr.net",
+];
+//This is the array that needs added to
+const styleSrcUrls = [
+  "https://kit-free.fontawesome.com/",
+  "https://api.mapbox.com/",
+  "https://api.tiles.mapbox.com/",
+  "https://fonts.googleapis.com/",
+  "https://use.fontawesome.com/",
+  "https://cdn.jsdelivr.net",
+  "https://stackpath.bootstrapcdn.com",
+];
+const connectSrcUrls = [
+  "https://api.mapbox.com/",
+  "https://a.tiles.mapbox.com/",
+  "https://b.tiles.mapbox.com/",
+  "https://events.mapbox.com/",
+  "https://cdn.jsdelivr.net",
+  "https://res.cloudinary.com",
+];
+const fontSrcUrls = [];
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: [],
+      connectSrc: ["'self'", ...connectSrcUrls],
+      scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+      styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      workerSrc: ["'self'", "blob:"],
+      objectSrc: [],
+      imgSrc: [
+        "'self'",
+        "blob:",
+        "data:",
+        "https://res.cloudinary.com/dlkejdrmm/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
+        "https://images.unsplash.com/",
+      ],
+      fontSrc: ["'self'", ...fontSrcUrls],
+    },
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());

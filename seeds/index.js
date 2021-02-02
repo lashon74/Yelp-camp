@@ -36,19 +36,18 @@ const seedDB = async () => {
         // For groJson long then lat using the cooridinates in seed file to replace the ones o cluster map
         coordinates: [
           cities[random1000].longitude,
-          cities[random1000].latitude
-        
+          cities[random1000].latitude,
         ],
       },
       images: [
         {
           url:
-            "https://res.cloudinary.com/douqbebwk/image/upload/v1600060601/YelpCamp/ahfnenvca4tha00h2ubt.png",
+            "https://res.cloudinary.com/dlkejdrmm/image/upload/v1612248649/Yelp-Camp/tw62zw4j7vlmeim0ie3f.png",
           filename: "YelpCamp/ahfnenvca4tha00h2ubt",
         },
         {
           url:
-            "https://res.cloudinary.com/douqbebwk/image/upload/v1600060601/YelpCamp/ruyoaxgf72nzpi4y6cdi.png",
+            "https://res.cloudinary.com/dlkejdrmm/image/upload/v1612248649/Yelp-Camp/buzf9rgoax3acpnpibup.png",
           filename: "YelpCamp/ruyoaxgf72nzpi4y6cdi",
         },
       ],
