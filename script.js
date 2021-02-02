@@ -1,7 +1,8 @@
-//Wil run if not in production mode  
-if(process.env.NODE_ENV !== "production") {
+// Wil run if not in production mode
+if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
+// require('dotenv').config();
 const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
@@ -16,8 +17,12 @@ const User = require("./models/user");
 const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
+const helmet = require("helmet");
+const { contentSecurityPolicy } = require("helmet");
+// const mongoSanitize = require("express-mongo-sanitize");
 
-// Main Js file 
+// Main Js file
+
 mongoose.connect("mongodb://localhost:27017/yelp-camp", {
   useNewUrlParser: true,
   useCreateIndex: true,
@@ -40,13 +45,19 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
+// app.use(mongoSanitize);
 
+// This ensures that cookies are only accepted over http not JS
 const sessionConfig = {
+  // Gives name to session
+  name: "session",
   secret: "thisshouldbeabettersecret!",
   resave: false,
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
+    // amkes the session https so it will be secure
+    // secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
@@ -54,6 +65,7 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 app.use(flash());
+app.use(helmet({contentSecurityPolicy: false}));
 
 app.use(passport.initialize());
 app.use(passport.session());
